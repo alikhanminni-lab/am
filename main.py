@@ -1,8 +1,25 @@
 import telebot
 import json
 import os
+from Flask import Flask, requests
+import requests
+import python-dotenv
+import gdown
+import re
+import logging
+import sys
+
+logging.basicConfig(level=logging.INFO)
+
 API_TOKEN = os.getenv("API_TOKEN")
+if not API_TOKEN:
+    sys.exit("Переменная API-TOKEN не задана в переменных окружения")
+
+
 bot = telebot.TeleBot(API_TOKEN)
+
+
+
 
 if os.path.exists("data.json") and os.path.getsize("data.json") != 0:
     with open("data.json", "r", encoding='utf-8') as f:
@@ -11,6 +28,22 @@ else:
     data = {"users": {}}
     with open("data.json", "w", encoding='utf-8') as f:
         json.dump(data, f, ensure_ascii=False, indent=4)
+
+app = Flask(__name__)
+
+@app.route("/")
+def index ():
+    return"бот запущен"
+@app.route(f"/{API_TOKEN}", methods=['POST'])
+def webhook():
+    try:
+        json_str = requests.get_data(as_text=True)
+        update = telebot.types.Update.de_json(json_str)
+        if update:
+            bot.process_new_updates([update])
+    except Exception as e:
+        app.logger.exception(e)
+    return "", 200
 
 @bot.message_handler(commands=['start'])
 def start(message):
@@ -164,5 +197,23 @@ def throwDice(call):
         bot.send_message(call.message.chat.id, "попробуй еще раз ")
 
 
+if __name__ == '__main__':
+    SERVER_URL = os.getenv("RENDER_EXTERNAL_URL")
 
-bot.polling(none_stop=True)
+    if SERVER_URL and API_TOKEN:
+        webhook_url = f "{SERVER_URL.rstrip("/")]/{API_TOKEN}"
+
+        try:
+            r=requests.get(f"https://api.telegram.org/bot{API_TOKEN}/setWebhook", params={"url": webhook_url}, timeout=10)
+
+            logging.info("Вебхук установлен")
+        except Exception as e:
+            logging.error("ошибка при установке webhook")
+        port = int(os.environ.get("PORT", 10000))
+        logging.info(f"Запуск приложения на порте {port}")
+        app.run (host = "0.0.0.0", port=port)
+    else:
+        logging.info("Запуск бота в режиме polling")
+        bot.remove_webhook()
+        bot.infinity_polling(timeout=60)
+        
