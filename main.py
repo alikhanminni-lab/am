@@ -200,7 +200,7 @@ if __name__ == '__main__':
     SERVER_URL = os.getenv("RENDER_EXTERNAL_URL")
 
     if SERVER_URL and API_TOKEN:
-        webhook_url = f "{SERVER_URL.rstrip("/")]/{API_TOKEN}"
+        webhook_url = f "{SERVER_URL.rstrip("/")/{API_TOKEN}"
 
         try:
             r=requests.get(f"https://api.telegram.org/bot{API_TOKEN}/setWebhook", params={"url": webhook_url}, timeout=10)
