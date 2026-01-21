@@ -3,7 +3,6 @@ import json
 import os
 from Flask import Flask, requests
 import requests
-import python-dotenv
 import gdown
 import re
 import logging
